@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>决策与任务管理</title>
+<style>
+:root {
+  --primary: #1e293b; --primary-light: #3b82f6; --primary-hover: #2563eb;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+  --bg: #f8fafc; --card-bg: #fff; --nav-bg: #1e293b;
+  --text: #0f172a; --text-secondary: #64748b; --text-light: #94a3b8;
+  --border: #e2e8f0; --border-light: #f1f5f9;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --radius-sm: 6px; --radius: 12px;
+  --space-sm: 8px; --space-md: 16px; --space-lg: 24px;
+  --sidebar-width: 200px; --transition: 0.2s ease;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size:14px; line-height:1.6; color:var(--text); background:var(--bg); min-height:100vh;
+}
+#app { display:flex; min-height:100vh; max-width:1200px; margin:0 auto; padding:0; }
+#nav-bar {
+  position:fixed; top:20px; left:50%; transform:translateX(calc(-50% - 480px + 20px));
+  width:var(--sidebar-width); background:var(--nav-bg); border-radius:var(--radius);
+  box-shadow:var(--shadow-lg); padding:24px 12px; display:flex; flex-direction:column;
+  gap:4px; min-height:400px; z-index:100;
+}
+.nav-brand { text-align:center; padding:8px 0 20px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-size:15px; font-weight:700; }
+.nav-brand .brand-icon { font-size:28px; display:block; margin-bottom:6px; }
+.nav-item {
+  display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer;
+  border:none; background:none; color:rgba(255,255,255,0.6); font-size:14px; font-weight:500;
+  border-radius:var(--radius-sm); transition:all var(--transition); width:100%; text-align:left; position:relative;
+}
+.nav-item:hover { color:#fff; background:rgba(255,255,255,0.08); }
+.nav-item.active { color:#fff; background:rgba(59,130,246,0.15); font-weight:600; }
+.nav-item.active::before {
+  content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:3px; height:20px; background:var(--primary-light); border-radius:0 3px 3px 0;
+}
+.nav-item .nav-icon { font-size:20px; flex-shrink:0; }
+.nav-footer { margin-top:auto; padding:16px 16px 0; border-top:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.3); font-size:11px; text-align:center; }
+#main-content { flex:1; margin-left:calc(var(--sidebar-width) + 24px); padding:20px 24px 40px; min-height:100vh; }
+.page { display:none; }
+.page.active { display:block; animation:fadeInUp .3s ease; }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:var(--space-md); transition:box-shadow var(--transition); }
+.card:hover { box-shadow:var(--shadow-md); }
+.card h2 { font-size:18px; font-weight:700; margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px; color:var(--text); }
+input,textarea,select { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:inherit; outline:none; background:var(--card-bg); color:var(--text); transition:all var(--transition); }
+input:focus,textarea:focus,select:focus { border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(59,130,246,0.12); }
+textarea { resize:vertical; min-height:64px; }
+.form-group { margin-bottom:var(--space-md); }
+.form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text-secondary); }
+select { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.825L1.175 4 2.238 2.938 6 6.7 9.763 2.937 10.825 4z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 22px; border:none; border-radius:var(--radius-sm); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:all var(--transition); }
+.btn:active { transform:scale(0.97); }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:#334155; box-shadow:0 2px 8px rgba(30,41,59,0.25); }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-danger:hover { background:#dc2626; box-shadow:0 2px 8px rgba(239,68,68,0.25); }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text-secondary); }
+.btn-outline:hover { border-color:var(--primary-light); color:var(--primary-light); background:rgba(59,130,246,0.04); }
+.btn-sm { padding:5px 14px; font-size:12px; }
+.task-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-md); }
+.task-card { background:var(--card-bg); border:1px solid var(--border-light); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; border-left:4px solid var(--primary-light); transition:all var(--transition); }
+.task-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:var(--border); }
+.task-card .task-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px; }
+.task-card .task-title { font-size:15px; font-weight:600; color:var(--text); }
+.task-card .task-time { font-size:12px; color:var(--text-light); white-space:nowrap; flex-shrink:0; }
+.task-card .task-desc { font-size:13px; color:var(--text-secondary); margin-bottom:8px; }
+.task-card .task-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.task-priority { display:inline-flex; align-items:center; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.priority-high { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+.priority-medium { background:#fffbeb; color:#d97706; border:1px solid #fde68a; }
+.priority-low { background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; }
+.slider-wrap { display:flex; align-items:center; gap:var(--space-md); }
+.slider-wrap input[type="range"] { flex:1; height:6px; -webkit-appearance:none; background:var(--border); border-radius:3px; outline:none; }
+.slider-wrap input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--primary-light); cursor:pointer; border:3px solid #fff; box-shadow:0 1px 6px rgba(59,130,246,0.3); }
+.slider-value { min-width:44px; text-align:center; font-weight:700; font-size:18px; color:var(--primary-light); }
+.recommend-list { list-style:none; }
+.recommend-item { display:flex; align-items:flex-start; gap:var(--space-md); padding:var(--space-md) 0; border-bottom:1px solid var(--border-light); }
+.recommend-item:last-child { border-bottom:none; }
+.recommend-rank { width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+.recommend-rank.top1 { background:linear-gradient(135deg,#f59e0b,#f97316); box-shadow:0 2px 8px rgba(245,158,11,0.3); }
+.recommend-rank.top2 { background:linear-gradient(135deg,#3b82f6,#6366f1); box-shadow:0 2px 8px rgba(59,130,246,0.3); }
+.recommend-rank.top3 { background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 2px 8px rgba(16,185,129,0.3); }
+.recommend-score { margin-left:auto; font-weight:700; font-size:16px; color:var(--primary-light); flex-shrink:0; }
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border-light); }
+.empty-state { text-align:center; padding:48px 20px; color:var(--text-secondary); }
+.empty-state .empty-icon { font-size:48px; margin-bottom:var(--space-md); opacity:0.8; }
+.progress-bar { height:8px; background:var(--border-light); border-radius:4px; overflow:hidden; margin-top:8px; }
+.progress-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--primary-light),#60a5fa); transition:width .3s ease; }
+.stat-card { flex:1; min-width:80px; padding:14px 12px; background:var(--bg); border-radius:var(--radius-sm); text-align:center; }
+.stat-card .stat-value { font-size:26px; font-weight:800; line-height:1.2; }
+.stat-card .stat-label { font-size:12px; color:var(--text-light); margin-top:2px; }
+.flex-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.flex-between { display:flex; justify-content:space-between; align-items:center; }
+.text-secondary { color:var(--text-secondary); } .text-light { color:var(--text-light); }
+.mt-8 { margin-top:8px; } .mt-16 { margin-top:16px; } .mb-16 { margin-bottom:16px; }
+@media (max-width:768px) {
+  #nav-bar { position:fixed; top:auto; bottom:0; left:0; right:0; transform:none; width:100%; min-height:unset; flex-direction:row; justify-content:space-around; padding:8px 12px; border-radius:12px 12px 0 0; gap:0; }
+  .nav-brand, .nav-footer { display:none; }
+  .nav-item { flex-direction:column; gap:2px; padding:6px 10px; font-size:11px; width:auto; text-align:center; }
+  .nav-item.active::before { display:none; }
+  .nav-item.active::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:16px; height:3px; background:var(--primary-light); border-radius:2px; }
+  #main-content { margin-left:0; padding:16px 16px 80px; }
+  .task-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app"><nav id="nav-bar"></nav><main id="main-content"></main></div>
+<script>
+// ===== Data Store =====
+const SK = 'decision_helper_data';
+function defData() { return { tasks:[], profile:{name:'学生',grade:'',school:''}, settings:{apiKey:'',apiEndpoint:'https://api.deepseek.com/v1/chat/completions',model:'deepseek-chat',urgencyWeight:80,importanceWeight:60,timeWeight:50}, nextTaskId:1 }; }
+function loadData() { try { const r=localStorage.getItem(SK); if(!r) return defData(); const p=JSON.parse(r), d=defData(); return {...d,...p,settings:{...d.settings,...p.settings},profile:{...d.profile,...p.profile}}; } catch { return defData(); } }
+function saveData(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+function nextId() { const d=loadData(); const id=d.nextTaskId; d.nextTaskId++; saveData(d); return id; }
+function addTask(t) { const d=loadData(); const nt={id:nextId(),title:t.title||'未命名',description:t.description||'',date:t.date||'',time:t.time||'',priority:t.priority||'medium',category:t.category||'general',done:false,createdAt:new Date().toISOString()}; d.tasks.push(nt); saveData(d); return nt; }
+function updateTask(id,up) { const d=loadData(); const i=d.tasks.findIndex(t=>t.id===id); if(i===-1)return false; d.tasks[i]={...d.tasks[i],...up}; saveData(d); return true; }
+function deleteTask(id) { const d=loadData(); d.tasks=d.tasks.filter(t=>t.id!==id); saveData(d); }
+function updateProfile(p) { const d=loadData(); d.profile={...d.profile,...p}; saveData(d); }
+function updateSettings(s) { const d=loadData(); d.settings={...d.settings,...s}; saveData(d); }
+
+// ===== Helpers =====
+function todayStr() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function formatDate(s) { if(!s)return ''; const d=new Date(s+'T00:00:00'); return (d.getMonth()+1)+'月'+d.getDate()+'日 周'+['日','一','二','三','四','五','六'][d.getDay()]; }
+const priLbl = { high:'高优先级', medium:'中优先级', low:'低优先级' };
+const catLbl = { study:'学习', exam:'考试', homework:'作业', life:'生活', general:'通用' };
+function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+// ===== Recommend Engine =====
+function rec(tasks,o={}) {
+  const {urgencyWeight:u=80, importanceWeight:i=60, timeWeight:t=50}=o, now=new Date();
+  return tasks.filter(t=>!t.done).map(task=>{
+    let s=0;
+    if(task.date) { const d=(new Date(task.date+'T23:59:59')-now)/864e5; if(d<0) s+=u; else if(d<=1) s+=u*0.9; else if(d<=3) s+=u*0.6; else if(d<=7) s+=u*0.3; else s+=u*0.1; }
+    else s+=u*0.2;
+    s+=i*({high:1,medium:0.6,low:0.3}[task.priority]||0.5);
+    if(task.time) { const h=+task.time.split(':')[0]; s+=t*(h>=8&&h<=22?0.8:h>=6?0.4:0.1); } else s+=t*0.5;
+    s=Math.round(Math.min(s,100));
+    const r=[];
+    if(task.date) { const d=Math.round((new Date(task.date+'T23:59:59')-now)/864e5); if(d<0) r.push('已逾期 '+Math.abs(d)+' 天'); else if(d===0) r.push('今天截止！'); else if(d===1) r.push('明天截止'); else if(d<=3) r.push(d+' 天后截止'); else r.push('还有 '+d+' 天'); }
+    else r.push('建议设截止日期');
+    if(task.priority==='high') r.push('高优先级'); else if(task.priority==='low') r.push('低优先级');
+    if(s>=80) r.push('强烈建议立即做'); else if(s>=60) r.push('建议尽快安排'); else r.push('空闲时处理');
+    return {task,score:s,reasons:r};
+  }).sort((a,b)=>b.score-a.score);
+}
+function dailySum(tasks,date) { const dt=tasks.filter(t=>t.date===date); return {total:dt.length,done:dt.filter(t=>t.done).length,pending:dt.filter(t=>!t.done).length,highPriority:dt.filter(t=>t.priority==='high'&&!t.done).length}; }
+
+// ===== Nav Bar =====
+function renderNav(curr, onNav) {
+  const pages=[{id:'home',icon:'📊',label:'首页'},{id:'tasks',icon:'📋',label:'任务'},{id:'recommend',icon:'🧠',label:'推荐'},{id:'profile',icon:'👤',label:'我的'},{id:'settings',icon:'⚙️',label:'设置'}];
+  const el=document.getElementById('nav-bar');
+  el.innerHTML='<div class="nav-brand"><span class="brand-icon">🎯</span>决策助手</div>'+pages.map(p=>'<button class="nav-item'+(p.id===curr?' active':'')+'" data-page="'+p.id+'"><span class="nav-icon">'+p.icon+'</span><span>'+p.label+'</span></button>').join('')+'<div class="nav-footer">v1.0 · 任务管理</div>';
+  el.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.page!==curr) onNav(b.dataset.page);}));
+}
+
+// ===== Pages =====
+let curPage='home';
+
+function renderPage(name) {
+  const main=document.getElementById('main-content'); main.innerHTML='';
+  if(name==='home') renderHome(main);
+  else if(name==='tasks') renderTasks(main);
+  else if(name==='recommend') renderRecommend(main);
+  else if(name==='profile') renderProfile(main);
+  else if(name==='settings') renderSettings(main);
+  curPage=name; renderNav(curPage, renderPage);
+}
+
+// ----- Home -----
+function renderHome(main) {
+  const d=loadData(), today=todayStr(), sum=dailySum(d.tasks,today), tdTasks=d.tasks.filter(t=>t.date===today&&!t.done);
+  const tHtml=tdTasks.length?tdTasks.map(t=>'<div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border-light);"><span>'+(t.done?'✅':'⭕')+' '+esc(t.title)+'</span><span style="font-size:12px;color:var(--text-light);">'+(t.time||'')+' '+(t.priority==='high'?'🔴':t.priority==='low'?'🟢':'🟡')+'</span></div>').join(''):'<div class="empty-state"><div class="empty-icon">🎉</div><p>今天没有待办！</p></div>';
+  main.innerHTML='<div class="page active"><div class="card"><h2>👋 你好，'+esc(d.profile.name||'学生')+'</h2><p style="color:var(--text-secondary);">今天是 '+formatDate(today)+'，加油！</p></div><div class="card"><h2>📈 今日进度</h2><div style="display:flex;gap:16px;text-align:center;flex-wrap:wrap;"><div class="stat-card"><div class="stat-value" style="color:var(--primary-light);">'+sum.total+'</div><div class="stat-label">总任务</div></div><div class="stat-card"><div class="stat-value" style="color:var(--success);">'+sum.done+'</div><div class="stat-label">已完成</div></div><div class="stat-card"><div class="stat-value" style="color:var(--warning);">'+sum.pending+'</div><div class="stat-label">待完成</div></div><div class="stat-card"><div class="stat-value" style="color:var(--danger);">'+sum.highPriority+'</div><div class="stat-label">高优</div></div></div><div class="progress-bar"><div class="progress-bar-fill" style="width:'+(sum.total?(sum.done/sum.total*100):0)+'%"></div></div></div><div class="card"><div class="flex-between"><h2>📋 今日待办</h2><button class="btn btn-sm btn-outline" id="toggle-quick-form">+ 快速添加</button></div><div id="quick-task-form" style="display:none;" class="mt-8"><div class="form-group"><input type="text" id="quick-title" placeholder="任务名称"></div><div class="flex-row"><input type="time" id="quick-time"><select id="quick-priority"><option value="medium">中优先级</option><option value="high">高优先级</option><option value="low">低优先级</option></select><button class="btn btn-primary btn-sm" id="quick-add-btn">添加</button></div></div><div class="mt-16">'+tHtml+'</div></div><div class="card"><h2>🚀 快捷操作</h2><div style="display:flex;gap:12px;flex-wrap:wrap;"><button class="btn btn-primary" onclick="switchPage(\'tasks\')">📋 管理任务</button><button class="btn btn-outline" onclick="switchPage(\'recommend\')">🧠 获取推荐</button><button class="btn btn-outline" onclick="switchPage(\'profile\')">👤 个人资料</button></div></div></div>';
+  const qf=document.getElementById('quick-task-form');
+  document.getElementById('toggle-quick-form').onclick=()=>{if(qf)qf.style.display=qf.style.display==='none'?'block':'none';};
+  document.getElementById('quick-add-btn').onclick=()=>{
+    const t=document.getElementById('quick-title').value.trim(); if(!t)return alert('请输入任务名');
+    addTask({title:t,time:document.getElementById('quick-time').value,priority:document.getElementById('quick-priority').value,date:today,category:'general'});
+    document.getElementById('quick-title').value=''; document.getElementById('quick-time').value=''; renderPage('home');
+  };
+}
+
+// ----- Tasks -----
+let tFilter={category:'',priority:'',done:''};
+let taskFormVisible=false;
+
+function renderTasks(main) {
+  const data=loadData(); let tasks=[...data.tasks];
+  if(tFilter.category) tasks=tasks.filter(t=>t.category===tFilter.category);
+  if(tFilter.priority) tasks=tasks.filter(t=>t.priority===tFilter.priority);
+  if(tFilter.done!=='') tasks=tasks.filter(t=>t.done===(tFilter.done==='done'));
+  tasks.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;if(a.date!==b.date){if(!a.date)return 1;if(!b.date)return -1;return a.date.localeCompare(b.date)}return(a.time||'').localeCompare(b.time||'')});
+  const cards=tasks.length?tasks.map(t=>'<div class="task-card" data-id="'+t.id+'" style="border-left-color:'+(t.priority==='high'?'#ef4444':t.priority==='low'?'#3b82f6':'#f59e0b')+'"><div class="task-header"><span class="task-title" style="text-decoration:'+(t.done?'line-through':'none')+';opacity:'+(t.done?0.6:1)+'">'+(t.done?'✅ ':'')+esc(t.title)+'</span><span class="task-time">'+(t.date?formatDate(t.date):'')+' '+(t.time||'')+'</span></div>'+(t.description?'<div class="task-desc">'+esc(t.description)+'</div>':'')+'<div class="task-footer"><div class="flex-row"><span class="task-priority priority-'+t.priority+'">'+(priLbl[t.priority]||t.priority)+'</span></div><div class="flex-row"><button class="btn btn-sm btn-outline" data-action="toggle" data-id="'+t.id+'">'+(t.done?'撤销':'完成')+'</button><button class="btn btn-sm btn-danger" data-action="delete" data-id="'+t.id+'">删除</button></div></div></div>').join(''):'<div class="empty-state"><div class="empty-icon">📭</div><p>暂无任务，创建一个吧！</p></div>';
+  main.innerHTML='<div class="page active"><div class="flex-between mb-16"><h2 style="font-size:20px;">📋 任务看板</h2><button class="btn btn-primary" id="show-task-form-btn">'+(taskFormVisible?'收起表单':'+ 新建任务')+'</button></div><div class="card"><div class="flex-row" style="gap:8px;"><select id="tf-cat" style="flex:1"><option value="">全部分类</option>'+Object.entries(catLbl).map(([k,v]) => '<option value="'+k+'"'+(tFilter.category===k?' selected':'')+'>'+v+'</option>').join('')+'</select><select id="tf-pri" style="flex:1"><option value="">全部优先级</option>'+Object.entries(priLbl).map(([k,v]) => '<option value="'+k+'"'+(tFilter.priority===k?' selected':'')+'>'+v+'</option>').join('')+'</select><select id="tf-done" style="flex:1"><option value="">全部状态</option><option value="pending"'+(tFilter.done==='pending'?' selected':'')+'>未完成</option><option value="done"'+(tFilter.done==='done'?' selected':'')+'>已完成</option></select></div></div><div id="task-form-area" style="display:'+(taskFormVisible?'block':'none')+'"><div class="card"><h2>➕ 新建任务</h2><div id="task-form"><div class="form-group"><label>任务名称 *</label><input type="text" id="ft-title" placeholder="例如：完成数学作业"></div><div class="form-group"><label>描述</label><textarea id="ft-desc"></textarea></div><div class="flex-row"><div style="flex:1"><div class="form-group"><label>日期</label><input type="date" id="ft-date"></div></div><div style="flex:1"><div class="form-group"><label>时间</label><input type="time" id="ft-time"></div></div></div><div class="flex-row"><div style="flex:1"><div class="form-group"><label>优先级</label><select id="ft-priority"><option value="medium">中优先级</option><option value="high">高优先级</option><option value="low">低优先级</option></select></div></div><div style="flex:1"><div class="form-group"><label>分类</label><select id="ft-category">'+Object.entries(catLbl).map(([k,v]) => '<option value="'+k+'">'+v+'</option>').join('')+'</select></div></div></div><button class="btn btn-primary" id="submit-task-btn">添加任务</button></div></div></div><div class="task-grid" id="task-grid">'+cards+'</div></div>';
+  setTimeout(bindTaskEvents, 0);
+}
+
+function bindTaskEvents() {
+  // Toggle form
+  const btn=document.getElementById('show-task-form-btn');
+  if(btn) btn.onclick=()=>{taskFormVisible=!taskFormVisible;renderPage('tasks');};
+  // Filters
+  document.getElementById('tf-cat').onchange=function(){tFilter.category=this.value;renderPage('tasks');};
+  document.getElementById('tf-pri').onchange=function(){tFilter.priority=this.value;renderPage('tasks');};
+  document.getElementById('tf-done').onchange=function(){const v=this.value;tFilter.done=v===''?'':v==='done'?'done':'pending';renderPage('tasks');};
+  // Submit
+  document.getElementById('submit-task-btn').onclick=function(){
+    const t=document.getElementById('ft-title').value.trim(); if(!t)return alert('请输入任务名');
+    addTask({title:t,description:document.getElementById('ft-desc').value.trim(),date:document.getElementById('ft-date').value,time:document.getElementById('ft-time').value,priority:document.getElementById('ft-priority').value,category:document.getElementById('ft-category').value});
+    taskFormVisible=false; renderPage('tasks');
+  };
+  // Toggle / Delete (event delegation on task-grid)
+  const grid=document.getElementById('task-grid');
+  if(grid) grid.addEventListener('click',function(e){
+    const btn=e.target.closest('button[data-action]'); if(!btn)return;
+    const id=+btn.dataset.id, action=btn.dataset.action;
+    if(action==='toggle'){const d=loadData(),t=d.tasks.find(x=>x.id===id);if(t){updateTask(id,{done:!t.done});renderPage('tasks');}}
+    if(action==='delete'){if(confirm('确定删除？')){deleteTask(id);renderPage('tasks');}}
+  });
+}
+
+// ----- Recommend -----
+function renderRecommend(main) {
+  const d=loadData(),s=d.settings,results=rec(d.tasks,{urgencyWeight:s.urgencyWeight||80,importanceWeight:s.importanceWeight||60,timeWeight:s.timeWeight||50});
+  const top=results.length?results.map((item,i)=>{const r=i+1,rc=r<=3?'top'+r:'';return '<li class="recommend-item"><span class="recommend-rank '+rc+'">'+r+'</span><div style="flex:1;"><div style="font-weight:600;">'+(item.task.done?'✅ ':'')+esc(item.task.title)+'</div><div style="font-size:12px;color:var(--text-light);">'+(item.task.date?formatDate(item.task.date):'无日期')+' '+(item.task.time||'')+' · '+(priLbl[item.task.priority]||item.task.priority)+' · '+(catLbl[item.task.category]||item.task.category)+'</div><div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">'+item.reasons.map(r=>'• '+r).join('<br>')+'</div></div><span class="recommend-score">'+item.score+'分</span></li>';}).join(''):'<div class="empty-state"><div class="empty-icon">✅</div><p>所有任务已完成 🎉</p></div>';
+  main.innerHTML='<div class="page active"><div class="card"><h2>🧠 决策推荐</h2><p style="color:var(--text-secondary);margin-bottom:16px;">根据紧迫性、重要性和时间可行性排序</p><div class="form-group"><label>⏰ 紧迫性权重</label><div class="slider-wrap"><input type="range" min="0" max="100" value="'+(s.urgencyWeight||80)+'" id="urg-slider"><span class="slider-value" id="urg-val">'+(s.urgencyWeight||80)+'</span></div></div><div class="form-group"><label>⭐ 重要性权重</label><div class="slider-wrap"><input type="range" min="0" max="100" value="'+(s.importanceWeight||60)+'" id="imp-slider"><span class="slider-value" id="imp-val">'+(s.importanceWeight||60)+'</span></div></div><div class="form-group"><label>🕐 时间可行性权重</label><div class="slider-wrap"><input type="range" min="0" max="100" value="'+(s.timeWeight||50)+'" id="time-slider"><span class="slider-value" id="time-val">'+(s.timeWeight||50)+'</span></div></div><button class="btn btn-primary mt-16" id="recalc-btn">🔄 重新计算</button></div><div class="card"><h2>📊 推荐排序</h2>'+(results.length?'<p style="font-size:12px;color:var(--text-light);">共 '+results.length+' 个待办</p>':'')+'<ul class="recommend-list">'+top+'</ul></div><div class="card"><h2>🤖 AI 智能建议</h2><p style="color:var(--text-secondary);font-size:13px;">配置 API Key 后可获取 AI 建议</p><div class="mt-8"><button class="btn btn-primary" id="ai-btn">💡 获取 AI 建议</button>'+(s.apiKey?'<span style="font-size:12px;color:var(--text-light);margin-left:8px;">✅ 已配置 API</span>':'<span style="font-size:12px;color:var(--text-light);margin-left:8px;">需在设置中配置 API Key</span>')+'</div><div id="ai-result" style="display:none;" class="mt-16"><div class="card" style="background:#f8f9ff;"><div id="ai-content" style="white-space:pre-wrap;font-size:14px;"></div></div></div></div></div>';
+  document.getElementById('urg-slider').oninput=function(){document.getElementById('urg-val').textContent=this.value;};
+  document.getElementById('imp-slider').oninput=function(){document.getElementById('imp-val').textContent=this.value;};
+  document.getElementById('time-slider').oninput=function(){document.getElementById('time-val').textContent=this.value;};
+  document.getElementById('recalc-btn').onclick=()=>{updateSettings({urgencyWeight:+document.getElementById('urg-slider').value,importanceWeight:+document.getElementById('imp-slider').value,timeWeight:+document.getElementById('time-slider').value});renderPage('recommend');};
+  document.getElementById('ai-btn').onclick=async()=>{
+    const d=loadData(),{apiKey,apiEndpoint,model}=d.settings; if(!apiKey){alert('请先在设置页配置 API Key');return;}
+    const rd=document.getElementById('ai-result'),cd=document.getElementById('ai-content'); rd.style.display='block'; cd.textContent='🤔 思考中...';
+    const top5=results.slice(0,5).map((item,i)=>(i+1)+'. '+item.task.title+'（'+item.score+'分）').join('\n');
+    try{const r=await fetch(apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:model||'deepseek-chat',messages:[{role:'system',content:'你是一个学生学习规划助手，用中文给出简短建议。'},{role:'user',content:'以下是用户待办：\n'+top5+'\n请给出具体建议：1.先做什么？2.时间安排 3.哪些可推迟'}],max_tokens:1024,temperature:0.7})});if(!r.ok)throw new Error('API 错误: '+r.status);const j=await r.json();cd.textContent=j.choices?.[0]?.message?.content||'无回复';}catch(e){cd.textContent='❌ '+e.message;}
+  };
+}
+
+// ----- Profile -----
+function renderProfile(main) {
+  const d=loadData(),{profile,tasks}=d,total=tasks.length,done=tasks.filter(t=>t.done).length,rate=total?Math.round(done/total*100):0;
+  const cc={}; tasks.forEach(t=>{const c=t.category||'general';cc[c]=(cc[c]||0)+1;});
+  const ch=Object.entries(cc).map(([k,v])=>'<div class="flex-between" style="padding:6px 0;border-bottom:1px solid var(--border-light);"><span>'+(catLbl[k]||k)+'</span><span style="font-weight:600;color:var(--primary-light);">'+v+' 个</span></div>').join('');
+  main.innerHTML='<div class="page active"><div class="card"><h2>👤 个人资料</h2><div class="form-group"><label>昵称</label><input type="text" id="pf-name" value="'+esc(profile.name)+'"></div><div class="form-group"><label>学校</label><input type="text" id="pf-school" value="'+esc(profile.school||'')+'"></div><div class="form-group"><label>年级</label><select id="pf-grade"><option value="">请选择</option>'+['初中','高中','大一','大二','大三','大四','研究生','其他'].map(g=>'<option value="'+g+'"'+(profile.grade===g?' selected':'')+'>'+g+'</option>').join('')+'</select></div><button class="btn btn-primary mt-8" id="save-profile">💾 保存</button></div><div class="card"><h2>📊 学习统计</h2><div style="display:flex;gap:16px;text-align:center;flex-wrap:wrap;margin-bottom:16px;"><div class="stat-card"><div class="stat-value" style="color:var(--primary-light);">'+total+'</div><div class="stat-label">总任务</div></div><div class="stat-card"><div class="stat-value" style="color:var(--success);">'+done+'</div><div class="stat-label">已完成</div></div><div class="stat-card"><div class="stat-value" style="color:var(--warning);">'+(total-done)+'</div><div class="stat-label">待完成</div></div></div><div><div class="flex-between"><span style="font-size:13px;color:var(--text-secondary);">完成率</span><span style="font-weight:700;color:var(--primary-light);">'+rate+'%</span></div><div class="progress-bar"><div class="progress-bar-fill" style="width:'+rate+'%"></div></div></div><h3 style="font-size:15px;margin:16px 0 8px;">分类统计</h3>'+(ch||'<p style="color:var(--text-light);font-size:13px;">暂无数据</p>')+'</div><div class="card"><h2>ℹ️ 关于</h2><p style="color:var(--text-secondary);font-size:13px;">决策与任务管理 v1.0<br>面向学生的智能任务管理工具<br>数据存储在浏览器本地</p></div></div>';
+  document.getElementById('save-profile').onclick=()=>{updateProfile({name:document.getElementById('pf-name').value.trim(),school:document.getElementById('pf-school').value.trim(),grade:document.getElementById('pf-grade').value});alert('✅ 已保存');renderPage('profile');};
+}
+
+// ----- Settings -----
+function renderSettings(main) {
+  const d=loadData(),s=d.settings;
+  main.innerHTML='<div class="page active"><div class="card"><h2>⚙️ 设置</h2><h3 style="font-size:15px;margin-bottom:12px;">🤖 AI 接口</h3><div class="form-group"><label>API 地址</label><input type="text" id="st-endpoint" value="'+esc(s.apiEndpoint)+'"></div><div class="form-group"><label>API Key</label><input type="password" id="st-apikey" value="'+esc(s.apiKey)+'"></div><div class="form-group"><label>模型</label><input type="text" id="st-model" value="'+esc(s.model)+'"></div><button class="btn btn-primary" id="save-settings">💾 保存</button></div><div class="card"><h2>🗃️ 数据管理</h2><p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">共 '+d.tasks.length+' 条记录</p><div class="flex-row" style="gap:8px;"><button class="btn btn-outline" id="export-btn">📤 导出</button><button class="btn btn-outline" id="import-btn">📥 导入</button><button class="btn btn-danger" id="clear-btn">🗑️ 清除</button></div><input type="file" id="import-file" accept=".json" style="display:none;"></div><div class="card"><h2>📖 指南</h2><ul style="font-size:13px;color:var(--text-secondary);line-height:2;"><li>📋 任务 — 创建、编辑、删除任务</li><li>🧠 推荐 — 智能排序 + AI 建议</li><li>数据存在浏览器本地</li></ul></div></div>';
+  document.getElementById('save-settings').onclick=()=>{updateSettings({apiEndpoint:document.getElementById('st-endpoint').value.trim(),apiKey:document.getElementById('st-apikey').value.trim(),model:document.getElementById('st-model').value.trim()});alert('✅ 已保存');};
+  document.getElementById('export-btn').onclick=()=>{const b=new Blob([JSON.stringify(loadData(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='backup-'+todayStr()+'.json';a.click();};
+  document.getElementById('import-btn').onclick=()=>document.getElementById('import-file').click();
+  document.getElementById('import-file').onchange=function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d.tasks)throw Error('格式错误');saveData(d);alert('✅ 已导入');renderPage('settings');}catch(er){alert('❌ 导入失败: '+er.message);}};r.readAsText(f);};
+  document.getElementById('clear-btn').onclick=()=>{if(confirm('确定清除所有数据？')){localStorage.removeItem('decision_helper_data');alert('已清除');renderPage('settings');}};
+}
+
+function switchPage(name) { renderPage(name); }
+document.addEventListener('DOMContentLoaded',()=>{renderPage('home');});
+</script>
+</body>
+</html>

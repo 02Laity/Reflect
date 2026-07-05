@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>镜 Reflect</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <nav id="nav-bar"></nav>
+    <main id="main-content"></main>
+    <nav id="bottom-nav"></nav>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "./pages/home.js": "./pages/home.js",
+      "./pages/tasks.js": "./pages/tasks.js",
+      "./pages/recommend.js": "./pages/recommend.js",
+      "./pages/profile.js": "./pages/profile.js",
+      "./pages/settings.js": "./pages/settings.js",
+      "./components/task-card.js": "./components/task-card.js",
+      "./components/slider-input.js": "./components/slider-input.js",
+      "./components/nav-bar.js": "./components/nav-bar.js",
+      "./store/data-store.js": "./store/data-store.js",
+      "./utils/recommend-engine.js": "./utils/recommend-engine.js",
+      "./utils/helpers.js": "./utils/helpers.js",
+      "./utils/api.js": "./utils/api.js"
+    }
+  }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
